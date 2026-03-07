@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Home</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body class="home-bg">
+
+<div class="header">
+<div class="logo-small">ChatApp</div>
+</div>
+
+<div class="search-box">
+<input type="text" placeholder="Search" onkeyup="searchChat()">
+</div>
+
+<div class="chat-list" id="chatList"></div>
+
+<div class="plus-btn" onclick="openAddUser()">+</div>
+
+<!-- ADD USER POPUP -->
+
+<div class="add-user-popup" id="addUserPopup">
+
+<div class="add-user-box">
+
+<h3>Start Chat</h3>
+
+<input type="text" id="phoneInput" placeholder="Enter phone number">
+
+<button onclick="startChat()">Start</button>
+
+<button onclick="closeAddUser()">Cancel</button>
+
+</div>
+
+</div>
+
+<script>
+
+/* POPUP */
+
+function openAddUser(){
+document.getElementById("addUserPopup").style.display="flex";
+}
+
+function closeAddUser(){
+document.getElementById("addUserPopup").style.display="none";
+}
+
+/* START CHAT */
+
+function startChat(){
+
+let phone=document.getElementById("phoneInput").value.trim();
+
+if(phone==="")return;
+
+window.location.href="chat.html?user="+phone;
+
+}
+
+/* LOAD CHATS */
+
+function loadChats(){
+
+const chatList=document.getElementById("chatList");
+
+chatList.innerHTML="";
+
+let chats=JSON.parse(localStorage.getItem("chats")||"[]");
+
+chats.forEach(c=>{
+
+let name=localStorage.getItem("contact_"+c.user) || c.user;
+
+let last=localStorage.getItem("lastMsg_"+c.user) || "";
+
+let avatar=name.charAt(0).toUpperCase();
+
+const div=document.createElement("div");
+
+div.className="chat-item";
+div.setAttribute("data-user",c.user);
+
+div.innerHTML=`
+
+<div class="avatar">${avatar}</div>
+
+<div class="chat-info">
+
+<div class="chat-name">${name}</div>
+
+<div class="chat-last">${last}</div>
+
+</div>
+
+`;
+
+div.onclick=()=>{
+window.location.href="chat.html?user="+c.user;
+}
+
+chatList.appendChild(div);
+
+});
+
+}
+
+loadChats();
+
+/* SEARCH */
+
+function searchChat(){
+
+let input=document.querySelector(".search-box input").value.toLowerCase();
+
+let chats=document.querySelectorAll(".chat-item");
+
+chats.forEach(function(chat){
+
+let name=chat.innerText.toLowerCase();
+
+if(name.includes(input)){
+chat.style.display="flex";
+}else{
+chat.style.display="none";
+}
+
+});
+
+}
+
+/* DELETE CHAT */
+
+document.addEventListener("contextmenu",function(e){
+
+let chat=e.target.closest(".chat-item");
+
+if(!chat)return;
+
+e.preventDefault();
+
+if(confirm("Delete this chat?")){
+
+let user=chat.getAttribute("data-user");
+
+let chats=JSON.parse(localStorage.getItem("chats")||"[]");
+
+chats=chats.filter(c=>c.user!==user);
+
+localStorage.setItem("chats",JSON.stringify(chats));
+
+localStorage.removeItem("lastMsg_"+user);
+
+chat.remove();
+
+}
+
+});
+
+</script>
+
+</body>
+</html>
