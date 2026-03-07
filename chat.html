@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chat</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body class="chat-bg">
+
+<div class="chat-header">
+
+<a href="home.html">←</a>
+
+<div class="avatar" id="avatar"></div>
+
+<div>
+<b id="chatName"></b><br>
+<span class="online">online</span>
+</div>
+
+<button id="saveNameBtn" onclick="openSavePopup()">Save Name</button>
+
+</div>
+
+<div class="chat-body" id="chatBody"></div>
+
+<div class="chat-input">
+<input id="msgInput" placeholder="Message">
+<button onclick="sendMsg()">Send</button>
+</div>
+
+<!-- SAVE NAME POPUP -->
+
+<div class="popup" id="savePopup">
+
+<div class="popup-box">
+
+<h3>Save Contact</h3>
+
+<input id="nameInput" placeholder="Enter name">
+
+<div class="popup-btns">
+<button onclick="closeSavePopup()">Cancel</button>
+<button onclick="saveName()">Save</button>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* GET USER */
+
+const params=new URLSearchParams(window.location.search);
+const user=params.get("user");
+
+const chatName=document.getElementById("chatName");
+const avatar=document.getElementById("avatar");
+
+/* LOAD CONTACT NAME */
+
+let savedName=localStorage.getItem("contact_"+user);
+
+if(savedName){
+
+chatName.innerText=savedName;
+avatar.innerText=savedName.charAt(0).toUpperCase();
+document.getElementById("saveNameBtn").style.display="none";
+
+}else{
+
+chatName.innerText=user;
+avatar.innerText=user.charAt(0);
+
+}
+
+/* POPUP */
+
+function openSavePopup(){
+document.getElementById("savePopup").style.display="flex";
+}
+
+function closeSavePopup(){
+document.getElementById("savePopup").style.display="none";
+}
+
+/* SAVE NAME */
+
+function saveName(){
+
+let name=document.getElementById("nameInput").value.trim();
+
+if(name==="")return;
+
+localStorage.setItem("contact_"+user,name);
+
+chatName.innerText=name;
+avatar.innerText=name.charAt(0).toUpperCase();
+
+document.getElementById("saveNameBtn").style.display="none";
+
+closeSavePopup();
+
+}
+
+/* SEND MESSAGE */
+
+function sendMsg(){
+
+const input=document.getElementById("msgInput");
+const text=input.value.trim();
+
+if(!text)return;
+
+const chat=document.getElementById("chatBody");
+
+const msg=document.createElement("div");
+msg.className="msg you";
+msg.innerText=text;
+
+chat.appendChild(msg);
+
+/* SAVE LAST MESSAGE */
+
+localStorage.setItem("lastMsg_"+user,text);
+
+/* SAVE CHAT LIST */
+
+let chats=JSON.parse(localStorage.getItem("chats")||"[]");
+
+let exists=chats.find(c=>c.user===user);
+
+if(!exists){
+
+chats.unshift({user:user});
+
+}else{
+
+chats=chats.filter(c=>c.user!==user);
+chats.unshift({user:user});
+
+}
+
+localStorage.setItem("chats",JSON.stringify(chats));
+
+input.value="";
+
+}
+
+/* DELETE MESSAGE */
+
+document.getElementById("chatBody").addEventListener("contextmenu",function(e){
+
+let msg=e.target.closest(".msg");
+
+if(!msg)return;
+
+e.preventDefault();
+
+if(confirm("Delete message?")){
+msg.remove();
+}
+
+});
+
+</script>
+
+</body>
+</html>
