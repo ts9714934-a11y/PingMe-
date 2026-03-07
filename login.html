@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PingMe - Login</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
+body{
+background:linear-gradient(#fff,#fff1f5);
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+font-family:sans-serif;
+}
+
+.login-box{
+background:#fff;
+width:90%;
+max-width:400px;
+padding:30px;
+border-radius:25px;
+box-shadow:0 8px 20px rgba(0,0,0,0.2);
+display:flex;
+flex-direction:column;
+gap:20px;
+align-items:center;
+}
+
+.logo{
+font-family:'Pacifico',cursive;
+font-size:48px;
+color:#FFD700;
+}
+
+input{
+width:100%;
+padding:12px;
+border-radius:25px;
+border:1px solid #ccc;
+}
+
+button{
+width:100%;
+padding:12px;
+border:none;
+border-radius:25px;
+background:#FFD700;
+cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="login-box">
+
+<div class="logo">PingMe</div>
+
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+</div>
+
+<script>
+
+function login(){
+
+const email=document.getElementById("email").value.trim();
+const password=document.getElementById("password").value.trim();
+
+if(!email||!password){
+alert("Email aur password bharo");
+return;
+}
+
+localStorage.setItem("pingme_user",email);
+window.location.href="home.html";
+
+}
+
+</script>
+
+</body>
+</html>
