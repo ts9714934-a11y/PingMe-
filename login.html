@@ -51,8 +51,7 @@ button{
   background:#FFD700;
   cursor:pointer;
 }
-
-#googleLogin{
+.google-btn{
   background:#4285F4;
   color:#fff;
   margin-top:10px;
@@ -63,28 +62,26 @@ button{
 <body>
 
 <div class="login-box">
-
   <div class="logo">PingMe</div>
 
   <input id="email" placeholder="Email">
   <input id="password" type="password" placeholder="Password">
-
   <button onclick="login()">Login</button>
-  <button id="googleLogin" onclick="loginWithGoogle()">Login with Google</button>
-
+  <button class="google-btn" onclick="loginWithGoogle()">Login with Google</button>
 </div>
 
 <!-- Supabase CDN + Config -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = "https://hfslxoltqichhqmjrrzi.supabase.co"; // Replace with your full Supabase URL
-const SUPABASE_ANON_KEY = "sb_publishable_u8X4qG7xNn34feiFu7wJxA_VdTamnO6";
+const SUPABASE_URL = "hfslxoltqichhqmjrrzi"; // Project ID
+const SUPABASE_ANON_KEY = "sb_publishable_u8X4qG7xNn34feiFu7wJxA_VdTamnO6"; // Publishable Key
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Email/Password login
 async function login(){
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
-  if(!email || !password) return alert("Email aur password bharo");
+  if(!email||!password) return alert("Email aur password bharo");
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if(error) return alert(error.message);
@@ -93,13 +90,13 @@ async function login(){
   window.location.href="home.html";
 }
 
-function loginWithGoogle(){
-  supabase.auth.signInWithOAuth({
+// Google login
+async function loginWithGoogle(){
+  const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: {
-      redirectTo: window.location.origin + '/home.html'
-    }
+    options: { redirectTo: 'https://ts9714934-a11y.github.io/PingMe-/' }
   });
+  if(error) alert(error.message);
 }
 </script>
 
