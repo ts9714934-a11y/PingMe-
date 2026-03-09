@@ -14,6 +14,8 @@
 
 <div class="avatar" id="avatar"></div>
 
+<input type="file" id="dpUpload" accept="image/*" style="display:none">
+
 <div>
 <b id="chatName"></b><br>
 <span class="online">online</span>
@@ -33,16 +35,29 @@
 <!-- SAVE NAME POPUP -->
 
 <div class="popup" id="savePopup">
-
 <div class="popup-box">
-
 <h3>Save Contact</h3>
-
 <input id="nameInput" placeholder="Enter name">
 
 <div class="popup-btns">
 <button onclick="closeSavePopup()">Cancel</button>
 <button onclick="saveName()">Save</button>
+</div>
+
+</div>
+</div>
+
+<!-- DELETE MESSAGE POPUP -->
+
+<div class="popup" id="deleteMsgPopup">
+
+<div class="popup-box">
+
+<h3>Delete message?</h3>
+
+<div class="popup-btns">
+<button onclick="closeDeleteMsg()">Cancel</button>
+<button onclick="confirmDeleteMsg()">Delete</button>
 </div>
 
 </div>
@@ -58,6 +73,7 @@ const user=params.get("user");
 
 const chatName=document.getElementById("chatName");
 const avatar=document.getElementById("avatar");
+const dpUpload=document.getElementById("dpUpload");
 
 /* LOAD CONTACT NAME */
 
@@ -75,6 +91,47 @@ chatName.innerText=user;
 avatar.innerText=user.charAt(0);
 
 }
+
+/* LOAD SAVED DP */
+
+let savedDP=localStorage.getItem("dp_"+user);
+
+if(savedDP){
+avatar.innerHTML="";
+avatar.style.backgroundImage="url("+savedDP+")";
+avatar.style.backgroundSize="cover";
+avatar.style.backgroundPosition="center";
+}
+
+/* CLICK DP */
+
+avatar.addEventListener("click",function(){
+dpUpload.click();
+});
+
+dpUpload.addEventListener("change",function(){
+
+const file=this.files[0];
+if(!file)return;
+
+const reader=new FileReader();
+
+reader.onload=function(e){
+
+const img=e.target.result;
+
+avatar.innerHTML="";
+avatar.style.backgroundImage="url("+img+")";
+avatar.style.backgroundSize="cover";
+avatar.style.backgroundPosition="center";
+
+localStorage.setItem("dp_"+user,img);
+
+};
+
+reader.readAsDataURL(file);
+
+});
 
 /* POPUP */
 
@@ -122,25 +179,17 @@ msg.innerText=text;
 
 chat.appendChild(msg);
 
-/* SAVE LAST MESSAGE */
-
 localStorage.setItem("lastMsg_"+user,text);
-
-/* SAVE CHAT LIST */
 
 let chats=JSON.parse(localStorage.getItem("chats")||"[]");
 
 let exists=chats.find(c=>c.user===user);
 
 if(!exists){
-
 chats.unshift({user:user});
-
 }else{
-
 chats=chats.filter(c=>c.user!==user);
 chats.unshift({user:user});
-
 }
 
 localStorage.setItem("chats",JSON.stringify(chats));
@@ -149,21 +198,41 @@ input.value="";
 
 }
 
-/* DELETE MESSAGE */
+/* MESSAGE DELETE POPUP */
+
+let msgToDelete=null;
 
 document.getElementById("chatBody").addEventListener("contextmenu",function(e){
 
 let msg=e.target.closest(".msg");
-
 if(!msg)return;
 
 e.preventDefault();
 
-if(confirm("Delete message?")){
-msg.remove();
-}
+msgToDelete=msg;
+
+document.getElementById("deleteMsgPopup").style.display="flex";
 
 });
+
+/* CLOSE POPUP */
+
+function closeDeleteMsg(){
+document.getElementById("deleteMsgPopup").style.display="none";
+msgToDelete=null;
+}
+
+/* CONFIRM DELETE */
+
+function confirmDeleteMsg(){
+
+if(!msgToDelete)return;
+
+msgToDelete.remove();
+
+closeDeleteMsg();
+
+}
 
 </script>
 
