@@ -1,6 +1,14 @@
+// Get elements
 const chatBody = document.getElementById("chatBody");
 const input = document.getElementById("msgInput");
-const typingDots = document.getElementById("typingDots");
+
+// Supabase setup
+const SUPABASE_URL = "https://hfslxoltqichhqmjrrzi.supabase.co"; // full Supabase URL
+const SUPABASE_ANON_KEY = "sb_publishable_u8X4qG7xNn34feiFu7wJxA_VdTamnO6";
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Get logged-in user
+const userId = localStorage.getItem("pingme_user");
 
 // Sparks generator - 5 per message
 function addSparks(msg,type){
@@ -15,42 +23,61 @@ function addSparks(msg,type){
   }
 }
 
-// Send message
-function sendMsg(){
-  const msg = input.value.trim();
-  if(!msg) return;
+// Load messages from Supabase
+async function loadMessages(chatUser){
+  chatBody.innerHTML="";
 
-  const myMsg = document.createElement("div");
-  myMsg.className="msg you";
-  myMsg.innerText = msg;
-  chatBody.appendChild(myMsg);
-  addSparks(myMsg,"you");
+  const { data: messages, error } = await supabase
+    .from('messages')
+    .select('*')
+    .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+    .order('created_at',{ascending:true});
 
-  input.value="";
+  if(error) return console.error(error);
+
+  messages.forEach(m=>{
+    // Only show messages between current chat user and logged-in user
+    if((m.sender_id===userId && m.receiver_id===chatUser) || 
+       (m.sender_id===chatUser && m.receiver_id===userId)) {
+
+      const div = document.createElement("div");
+      div.className = m.sender_id===userId?"msg you":"msg other";
+      div.innerText = m.content;
+      chatBody.appendChild(div);
+      addSparks(div,m.sender_id===userId?"you":"other");
+    }
+  });
+
   chatBody.scrollTop = chatBody.scrollHeight;
-
-  // Show typing dots
-  typingDots.style.display="flex";
-
-  setTimeout(()=>{
-    typingDots.style.display="none";
-
-    const reply = document.createElement("div");
-    reply.className="msg other";
-    reply.innerText="Haan, samajh gaya 🙂";
-    chatBody.appendChild(reply);
-    addSparks(reply,"other");
-
-    chatBody.scrollTop = chatBody.scrollHeight;
-  },1500);
 }
 
-// Enter key
+// Send message to Supabase
+async function sendMsg(chatUser){
+  const text = input.value.trim();
+  if(!text) return;
+
+  await supabase.from('messages').insert([{
+    sender_id: userId,
+    receiver_id: chatUser,
+    content: text
+  }]);
+
+  input.value="";
+  loadMessages(chatUser);
+}
+
+// Enter key sends message
 input.addEventListener("keypress", e => {
-  if(e.key==="Enter") sendMsg();
+  if(e.key==="Enter"){
+    const chatUser = new URLSearchParams(window.location.search).get("user");
+    sendMsg(chatUser);
+  }
 });
 
-// Show typing dots while typing
-input.addEventListener("input", ()=>{
-  typingDots.style.display = input.value.trim()!=="" ? "flex" : "none";
-});
+// Optional: show typing dots (if you have element with id typingDots)
+const typingDots = document.getElementById("typingDots");
+if(typingDots){
+  input.addEventListener("input", ()=>{
+    typingDots.style.display = input.value.trim()!=="" ? "flex" : "none";
+  });
+}
