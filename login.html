@@ -36,8 +36,25 @@ font-size:48px;
 color:#FFD700;
 }
 
-#clerk-login{
+input{
 width:100%;
+padding:12px;
+border-radius:25px;
+border:1px solid #ccc;
+}
+
+button{
+width:100%;
+padding:12px;
+border:none;
+border-radius:25px;
+background:#FFD700;
+cursor:pointer;
+}
+
+.google-btn{
+background:#4285F4;
+color:#fff;
 }
 </style>
 </head>
@@ -48,12 +65,18 @@ width:100%;
 
 <div class="logo">PingMe</div>
 
-<!-- Clerk Login Widget -->
-<div id="clerk-login"></div>
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+
+<button id="loginBtn">Login</button>
+
+<button class="google-btn" id="googleBtn">
+Login with Google
+</button>
 
 </div>
 
-<!-- Clerk JS -->
+<!-- Clerk SDK -->
 <script
 async
 crossorigin="anonymous"
@@ -73,8 +96,36 @@ if (Clerk.user) {
 window.location.href = "home.html";
 }
 
-Clerk.mountSignIn("#clerk-login", {
-redirectUrl: "home.html"
+// Email login
+document.getElementById("loginBtn").addEventListener("click", async () => {
+
+const email = document.getElementById("email").value;
+const password = document.getElementById("password").value;
+
+if(!email || !password){
+alert("Email aur password bharo");
+return;
+}
+
+const signIn = await Clerk.client.signIn.create({
+identifier: email,
+password: password
+});
+
+if(signIn.status === "complete"){
+window.location.href = "home.html";
+}
+
+});
+
+// Google login
+document.getElementById("googleBtn").addEventListener("click", async () => {
+
+await Clerk.client.signIn.authenticateWithRedirect({
+strategy: "oauth_google",
+redirectUrl: window.location.origin + "/home.html"
+});
+
 });
 
 });
