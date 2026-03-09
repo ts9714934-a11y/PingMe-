@@ -5,24 +5,12 @@
 <title>Chat</title>
 <link rel="stylesheet" href="style.css">
 </head>
-
 <body class="chat-bg">
 
 <div class="chat-header">
-
 <a href="home.html">←</a>
-
 <div class="avatar" id="avatar"></div>
-
-<input type="file" id="dpUpload" accept="image/*" style="display:none">
-
-<div>
-<b id="chatName"></b><br>
-<span class="online">online</span>
-</div>
-
-<button id="saveNameBtn" onclick="openSavePopup()">Save Name</button>
-
+<div><b id="chatName"></b><br><span class="online">online</span></div>
 </div>
 
 <div class="chat-body" id="chatBody"></div>
@@ -32,209 +20,50 @@
 <button onclick="sendMsg()">Send</button>
 </div>
 
-<!-- SAVE NAME POPUP -->
-
-<div class="popup" id="savePopup">
-<div class="popup-box">
-<h3>Save Contact</h3>
-<input id="nameInput" placeholder="Enter name">
-
-<div class="popup-btns">
-<button onclick="closeSavePopup()">Cancel</button>
-<button onclick="saveName()">Save</button>
-</div>
-
-</div>
-</div>
-
-<!-- DELETE MESSAGE POPUP -->
-
-<div class="popup" id="deleteMsgPopup">
-
-<div class="popup-box">
-
-<h3>Delete message?</h3>
-
-<div class="popup-btns">
-<button onclick="closeDeleteMsg()">Cancel</button>
-<button onclick="confirmDeleteMsg()">Delete</button>
-</div>
-
-</div>
-
-</div>
-
+<!-- Supabase CDN + Config -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+const SUPABASE_URL = "hfslxoltqichhqmjrrzi"; // Project ID
+const SUPABASE_ANON_KEY = "sb_publishable_u8X4qG7xNn34feiFu7wJxA_VdTamnO6"; // Publishable Key
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* GET USER */
+const params = new URLSearchParams(window.location.search);
+const chatUser = params.get("user");
+const userId = localStorage.getItem("pingme_user");
 
-const params=new URLSearchParams(window.location.search);
-const user=params.get("user");
+const chatBody = document.getElementById("chatBody");
+document.getElementById("chatName").innerText = chatUser;
 
-const chatName=document.getElementById("chatName");
-const avatar=document.getElementById("avatar");
-const dpUpload=document.getElementById("dpUpload");
+async function loadMessages(){
+  const { data: messages, error } = await supabase
+    .from('messages')
+    .select('*')
+    .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+    .order('created_at',{ascending:true});
 
-/* LOAD CONTACT NAME */
+  if(error) return console.error(error);
 
-let savedName=localStorage.getItem("contact_"+user);
-
-if(savedName){
-
-chatName.innerText=savedName;
-avatar.innerText=savedName.charAt(0).toUpperCase();
-document.getElementById("saveNameBtn").style.display="none";
-
-}else{
-
-chatName.innerText=user;
-avatar.innerText=user.charAt(0);
-
+  chatBody.innerHTML = "";
+  messages.forEach(m=>{
+    const div = document.createElement("div");
+    div.className = m.sender_id===userId?"msg you":"msg other";
+    div.innerText = m.content;
+    chatBody.appendChild(div);
+  });
+  chatBody.scrollTop = chatBody.scrollHeight;
 }
 
-/* LOAD SAVED DP */
+async function sendMsg(){
+  const input = document.getElementById("msgInput");
+  const text = input.value.trim();
+  if(!text) return;
 
-let savedDP=localStorage.getItem("dp_"+user);
-
-if(savedDP){
-avatar.innerHTML="";
-avatar.style.backgroundImage="url("+savedDP+")";
-avatar.style.backgroundSize="cover";
-avatar.style.backgroundPosition="center";
+  await supabase.from('messages').insert([{ sender_id: userId, receiver_id: chatUser, content: text }]);
+  input.value="";
+  loadMessages();
 }
 
-/* CLICK DP */
-
-avatar.addEventListener("click",function(){
-dpUpload.click();
-});
-
-dpUpload.addEventListener("change",function(){
-
-const file=this.files[0];
-if(!file)return;
-
-const reader=new FileReader();
-
-reader.onload=function(e){
-
-const img=e.target.result;
-
-avatar.innerHTML="";
-avatar.style.backgroundImage="url("+img+")";
-avatar.style.backgroundSize="cover";
-avatar.style.backgroundPosition="center";
-
-localStorage.setItem("dp_"+user,img);
-
-};
-
-reader.readAsDataURL(file);
-
-});
-
-/* POPUP */
-
-function openSavePopup(){
-document.getElementById("savePopup").style.display="flex";
-}
-
-function closeSavePopup(){
-document.getElementById("savePopup").style.display="none";
-}
-
-/* SAVE NAME */
-
-function saveName(){
-
-let name=document.getElementById("nameInput").value.trim();
-
-if(name==="")return;
-
-localStorage.setItem("contact_"+user,name);
-
-chatName.innerText=name;
-avatar.innerText=name.charAt(0).toUpperCase();
-
-document.getElementById("saveNameBtn").style.display="none";
-
-closeSavePopup();
-
-}
-
-/* SEND MESSAGE */
-
-function sendMsg(){
-
-const input=document.getElementById("msgInput");
-const text=input.value.trim();
-
-if(!text)return;
-
-const chat=document.getElementById("chatBody");
-
-const msg=document.createElement("div");
-msg.className="msg you";
-msg.innerText=text;
-
-chat.appendChild(msg);
-
-localStorage.setItem("lastMsg_"+user,text);
-
-let chats=JSON.parse(localStorage.getItem("chats")||"[]");
-
-let exists=chats.find(c=>c.user===user);
-
-if(!exists){
-chats.unshift({user:user});
-}else{
-chats=chats.filter(c=>c.user!==user);
-chats.unshift({user:user});
-}
-
-localStorage.setItem("chats",JSON.stringify(chats));
-
-input.value="";
-
-}
-
-/* MESSAGE DELETE POPUP */
-
-let msgToDelete=null;
-
-document.getElementById("chatBody").addEventListener("contextmenu",function(e){
-
-let msg=e.target.closest(".msg");
-if(!msg)return;
-
-e.preventDefault();
-
-msgToDelete=msg;
-
-document.getElementById("deleteMsgPopup").style.display="flex";
-
-});
-
-/* CLOSE POPUP */
-
-function closeDeleteMsg(){
-document.getElementById("deleteMsgPopup").style.display="none";
-msgToDelete=null;
-}
-
-/* CONFIRM DELETE */
-
-function confirmDeleteMsg(){
-
-if(!msgToDelete)return;
-
-msgToDelete.remove();
-
-closeDeleteMsg();
-
-}
-
+loadMessages();
 </script>
-
 </body>
 </html>
