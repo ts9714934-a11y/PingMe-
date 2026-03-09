@@ -9,47 +9,47 @@
 @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
 
 body{
-background:linear-gradient(#fff,#fff1f5);
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-font-family:sans-serif;
+  background:linear-gradient(#fff,#fff1f5);
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-family:sans-serif;
 }
 
 .login-box{
-background:#fff;
-width:90%;
-max-width:400px;
-padding:30px;
-border-radius:25px;
-box-shadow:0 8px 20px rgba(0,0,0,0.2);
-display:flex;
-flex-direction:column;
-gap:20px;
-align-items:center;
+  background:#fff;
+  width:90%;
+  max-width:400px;
+  padding:30px;
+  border-radius:25px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.2);
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+  align-items:center;
 }
 
 .logo{
-font-family:'Pacifico',cursive;
-font-size:48px;
-color:#FFD700;
+  font-family:'Pacifico',cursive;
+  font-size:48px;
+  color:#FFD700;
 }
 
 input{
-width:100%;
-padding:12px;
-border-radius:25px;
-border:1px solid #ccc;
+  width:100%;
+  padding:12px;
+  border-radius:25px;
+  border:1px solid #ccc;
 }
 
 button{
-width:100%;
-padding:12px;
-border:none;
-border-radius:25px;
-background:#FFD700;
-cursor:pointer;
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:25px;
+  background:#FFD700;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -58,34 +58,40 @@ cursor:pointer;
 
 <div class="login-box">
 
-<div class="logo">PingMe</div>
+  <div class="logo">PingMe</div>
 
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
 
-<button onclick="login()">Login</button>
+  <button onclick="login()">Login</button>
+  <button onclick="loginWithGoogle()">Login with Google</button>
 
 </div>
 
 <!-- Supabase CDN + Config -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = "hfslxoltqichhqmjrrzi"; // Project ID as URL
+const SUPABASE_URL = "https://hfslxoltqichhqmjrrzi.supabase.co"; // Correct Project URL format
 const SUPABASE_ANON_KEY = "sb_publishable_u8X4qG7xNn34feiFu7wJxA_VdTamnO6"; // Publishable Key
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Email/Password login
 async function login(){
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
-  if(!email||!password) return alert("Email aur password bharo");
+  if(!email || !password) return alert("Email aur password bharo");
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if(error) return alert(error.message);
 
-  // Save logged-in user in localStorage for reference
   localStorage.setItem("pingme_user", data.user.id);
-
   window.location.href="home.html";
+}
+
+// Google login
+async function loginWithGoogle(){
+  const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+  if(error) return alert(error.message);
 }
 </script>
 
