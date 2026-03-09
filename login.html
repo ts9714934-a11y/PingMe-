@@ -70,7 +70,9 @@ color:#fff;
 
 <button onclick="login()">Login</button>
 
-<button class="google-btn" onclick="googleLogin()">Login with Google</button>
+<button class="google-btn" onclick="googleLogin()">
+Login with Google
+</button>
 
 </div>
 
@@ -78,25 +80,30 @@ color:#fff;
 
 <script>
 
-const supabaseClient = supabase.createClient(
+const supabase = supabase.createClient(
 "https://hfslxoltqichhqmjrrzi.supabase.co",
 "sb_publishable_u8X4qG7xNn34feiFu7wJxA_VdTamnO6"
 );
 
-// Email login
+// AUTO LOGIN
+checkUser();
+
+async function checkUser(){
+const { data } = await supabase.auth.getSession();
+
+if(data.session){
+window.location.href="home.html";
+}
+}
+
 async function login(){
 
 const email=document.getElementById("email").value.trim();
 const password=document.getElementById("password").value.trim();
 
-if(!email || !password){
-alert("Email aur password bharo");
-return;
-}
-
-const { data, error } = await supabaseClient.auth.signInWithPassword({
-email: email,
-password: password
+const { error } = await supabase.auth.signInWithPassword({
+email:email,
+password:password
 });
 
 if(error){
@@ -105,22 +112,16 @@ return;
 }
 
 window.location.href="home.html";
-
 }
 
-// Google login
 async function googleLogin(){
 
-const { data, error } = await supabaseClient.auth.signInWithOAuth({
-provider: "google",
-options: {
-redirectTo: "https://ts9714934-a11y.github.io/PingMe-/home.html"
+await supabase.auth.signInWithOAuth({
+provider:"google",
+options:{
+redirectTo:"https://ts9714934-a11y.github.io/PingMe-/home.html"
 }
 });
-
-if(error){
-alert(error.message);
-}
 
 }
 
